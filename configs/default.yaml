@@ -1,0 +1,9 @@
+floors: 18
+elevators: 2
+capacity: 12
+floor_height_m: 3.0
+speed_mps: 3.0
+dwell_time_s: 5
+spawn_prob: 0.2
+horizon_s: 3600
+seed: 42
