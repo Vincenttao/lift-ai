@@ -13,7 +13,7 @@ from pathlib import Path
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback
-from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecMonitor
 
 from core.environment import SimulationConfig
 from gym_env.env import LiftGymEnv
@@ -29,9 +29,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval_freq", type=int, default=50_000, help="Evaluate every N steps; 0 to disable.")
     parser.add_argument("--eval_episodes", type=int, default=3, help="Episodes per evaluation run.")
     parser.add_argument("--lr", type=float, default=1e-4, help="PPO learning rate.")
-    parser.add_argument("--n_steps", type=int, default=4096, help="PPO rollout steps per update.")
+    parser.add_argument(
+        "--n_steps",
+        type=int,
+        default=4096,
+        help="Rollout steps per env per update (total batch = n_steps * num_envs).",
+    )
     parser.add_argument("--batch_size", type=int, default=1024, help="PPO batch size.")
     parser.add_argument("--device", type=str, default="auto", help="Device for PPO ('auto', 'cuda', 'cpu').")
+    parser.add_argument("--num_envs", type=int, default=1, help="Number of parallel envs for sampling.")
+    parser.add_argument(
+        "--vec_env",
+        type=str,
+        default="subproc",
+        choices=["subproc", "dummy"],
+        help="Vector env type: subproc (multiprocess) or dummy (single process).",
+    )
     parser.add_argument("--no_tb", action="store_true", help="Disable TensorBoard logging.")
     return parser.parse_args()
 
@@ -46,7 +59,18 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     config = SimulationConfig(spawn_prob=args.spawn_prob, seed=args.seed)
-    env = LiftGymEnv(config)
+
+    def make_env_fn():
+        def _init():
+            return LiftGymEnv(config)
+
+        return _init
+
+    if args.vec_env == "subproc" and args.num_envs > 1:
+        env = SubprocVecEnv([make_env_fn() for _ in range(args.num_envs)])
+    else:
+        env = DummyVecEnv([make_env_fn() for _ in range(args.num_envs)])
+    env = VecMonitor(env)
     tb_log_dir = None
     if not args.no_tb:
         if importlib.util.find_spec("tensorboard") is not None:
@@ -67,7 +91,7 @@ def main() -> None:
 
     callback = None
     if args.eval_freq > 0:
-        eval_env = Monitor(LiftGymEnv(config))
+        eval_env = VecMonitor(DummyVecEnv([make_env_fn()]))
         callback = EvalCallback(
             eval_env,
             eval_freq=args.eval_freq,
