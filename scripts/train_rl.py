@@ -36,6 +36,8 @@ def parse_args() -> argparse.Namespace:
         help="Rollout steps per env per update (total batch = n_steps * num_envs).",
     )
     parser.add_argument("--batch_size", type=int, default=1024, help="PPO batch size.")
+    parser.add_argument("--clip_range", type=float, default=0.2, help="PPO clip range epsilon.")
+    parser.add_argument("--ent_coef", type=float, default=0.0, help="Entropy bonus coefficient.")
     parser.add_argument("--device", type=str, default="auto", help="Device for PPO ('auto', 'cuda', 'cpu').")
     parser.add_argument("--num_envs", type=int, default=1, help="Number of parallel envs for sampling.")
     parser.add_argument(
@@ -86,11 +88,15 @@ def main() -> None:
         learning_rate=args.lr,
         n_steps=args.n_steps,
         batch_size=args.batch_size,
+        clip_range=args.clip_range,
+        ent_coef=args.ent_coef,
         device=args.device,
     )
 
     callback = None
     if args.eval_freq > 0:
+        best_dir = out_dir / "best"
+        best_dir.mkdir(parents=True, exist_ok=True)
         eval_env = VecMonitor(DummyVecEnv([make_env_fn()]))
         callback = EvalCallback(
             eval_env,
@@ -98,6 +104,7 @@ def main() -> None:
             n_eval_episodes=args.eval_episodes,
             deterministic=True,
             render=False,
+            best_model_save_path=str(best_dir),
         )
     model.learn(total_timesteps=args.timesteps, callback=callback)
     model.save(str(out_dir / "model"))
@@ -112,6 +119,8 @@ def main() -> None:
         "lr": args.lr,
         "n_steps": args.n_steps,
         "batch_size": args.batch_size,
+        "clip_range": args.clip_range,
+        "ent_coef": args.ent_coef,
         "device": args.device,
         "tensorboard": False if args.no_tb else bool(tb_log_dir),
     }
