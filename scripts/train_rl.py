@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lr", type=float, default=1e-4, help="PPO learning rate.")
     parser.add_argument("--n_steps", type=int, default=4096, help="PPO rollout steps per update.")
     parser.add_argument("--batch_size", type=int, default=1024, help="PPO batch size.")
+    parser.add_argument("--device", type=str, default="auto", help="Device for PPO ('auto', 'cuda', 'cpu').")
     parser.add_argument("--no_tb", action="store_true", help="Disable TensorBoard logging.")
     return parser.parse_args()
 
@@ -61,6 +62,7 @@ def main() -> None:
         learning_rate=args.lr,
         n_steps=args.n_steps,
         batch_size=args.batch_size,
+        device=args.device,
     )
 
     callback = None
@@ -86,6 +88,7 @@ def main() -> None:
         "lr": args.lr,
         "n_steps": args.n_steps,
         "batch_size": args.batch_size,
+        "device": args.device,
         "tensorboard": False if args.no_tb else bool(tb_log_dir),
     }
     with open(out_dir / "run_meta.json", "w", encoding="utf-8") as f:
