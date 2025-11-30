@@ -13,6 +13,28 @@ pip install -e .[dev]
 ```
 可选：`pip install -e .[rl]` 安装 gymnasium、stable-baselines3 等 RL 相关依赖。
 
+### Colab 快速开始
+1. 打开 Colab，选择 CPU/GPU 均可（如需 GPU，在运行时设置中启用）。
+2. 克隆仓库后安装依赖：
+   ```
+   !git clone https://github.com/<your-org>/lift-ai.git
+   %cd lift-ai
+   !pip install -r requirements-colab.txt
+   !pip install -e .[rl]
+   ```
+3. 运行最小示例：
+   ```python
+   from core.environment import SimulationConfig, LiftSimEnvironment
+
+   env = LiftSimEnvironment(config=SimulationConfig(seed=42, floors=6, elevators=2, horizon_s=120))
+   obs = env.reset()
+   for _ in range(10):
+       obs, reward, done, info = env.step()
+       if done:
+           break
+   print("time", obs["time"], "reward", reward)
+   ```
+
 ## 常用命令
 - `make test`：运行 pytest 基础用例。
 - `pytest -k smoke -vv`：按需运行单个/部分测试。

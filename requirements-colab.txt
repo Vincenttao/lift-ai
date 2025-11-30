@@ -1,0 +1,6 @@
+# Colab-friendly dependency pinning for RL extras.
+# Usage in Colab: `pip install -r requirements-colab.txt && pip install -e .`
+gymnasium>=0.29.0
+numpy>=1.25.0
+matplotlib>=3.8.0
+stable-baselines3>=2.1.0

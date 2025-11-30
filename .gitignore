@@ -35,3 +35,5 @@ data/
 experiments/**/*.csv
 experiments/**/*.json
 
+# Local train data
+artifacts/

@@ -10,6 +10,7 @@ class MetricsCollector:
     ride_times: List[int] = field(default_factory=list)
     completed: int = 0
     rejected: int = 0
+    unserved: int = 0
 
     def record_completion(self, wait_time: int, ride_time: int) -> None:
         self.wait_times.append(wait_time)
@@ -19,10 +20,14 @@ class MetricsCollector:
     def record_rejection(self) -> None:
         self.rejected += 1
 
+    def record_unserved(self, count: int) -> None:
+        self.unserved += count
+
     def summary(self) -> dict:
         return {
             "completed": self.completed,
             "rejected": self.rejected,
+            "unserved": self.unserved,
             "avg_wait": self._avg(self.wait_times),
             "p95_wait": self._percentile(self.wait_times, 0.95),
             "avg_ride": self._avg(self.ride_times),
@@ -39,4 +44,3 @@ class MetricsCollector:
         values_sorted = sorted(values)
         idx = int((len(values_sorted) - 1) * q)
         return float(values_sorted[idx])
-

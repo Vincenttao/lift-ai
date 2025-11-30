@@ -28,7 +28,7 @@ class ETADispatcher(Dispatcher):
         self.dwell_time = dwell_time
 
     def assign(self, time: int, passengers: Iterable[Passenger], elevators: Sequence[Elevator]) -> None:
-        # Placeholder: greedy min ETA based on distance; no path optimization yet.
+        # Greedy min distance (ETA proxy) based on current floor; ignores queue ordering.
         for p in passengers:
             if p.assigned_elevator is not None:
                 continue
@@ -44,4 +44,3 @@ class ETADispatcher(Dispatcher):
         if not candidates:
             return None
         return min(candidates, key=lambda e: abs(e.current_floor - origin_floor))
-
